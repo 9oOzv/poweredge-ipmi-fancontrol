@@ -2,7 +2,7 @@
 
 A simple daemon script implementing a custom fan curve on Dell PowerEdge servers using IPMI.
 
-I wrote this for my own purposes. If you want to use this, do it on your own risk. This hasn't been tester thoroughly or under heavy loads. Might cause damage due to overheating in the worst case.
+I wrote this for my own purposes - to make my home server run quieter. If you want to use this, do it on your own risk. This hasn't been tester thoroughly or under heavy loads. Might cause damage due to overheating in the worst case.
 
 # Deployment
 
