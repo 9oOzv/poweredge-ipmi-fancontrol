@@ -1,0 +1,75 @@
+#!/bin/bash
+set -euo pipefail
+D="$(dirname "$(readlink -f "$0")")"
+
+
+export IPMI_USER="fancontrol"
+export IPMI_BIN="/srv/ipmi-fancontrol/ipmi"
+export IPMI_DIR="$(dirname "$IPMI_BIN")"
+export IPMI_SERVICE_NAME="ipmi-fancontrol"
+
+
+abort() {
+    echo "Aborting..." >&2
+    exit 1
+}
+
+
+
+
+user=
+read -r -p "User to run the service as (will be created if it does not exist) (empty for default 'fancontrol'): " user
+IPMI_USER="${user:-$IPMI_USER}"
+
+if [ -n "$(getent passwd "$IPMI_USER")" ]; then
+    echo "The '$IPMI_USER' user already exists. Will not recreate."
+    ok=""
+    read -r -p "Continue? (y/n)" ok
+    if [ "$ok" != "y" ]; then
+        abort
+    fi
+else
+    ok=""
+    read -r -p "Create user '$IPMI_USER' (y/n)" ok
+    if [ "$ok" == "y" ]; then
+        echo "Creating user '$IPMI_USER'"
+        sudo adduser --system --disabled-login --disabled-password --no-create-home --home "/srv/ipmi-fancontrol" "$IPMI_USER"
+    else
+        abort
+    fi
+fi
+
+
+
+
+
+
+
+echo "Copying the ipmi script to $IPMI_BIN"
+echo "Note: Please ensure that $IPMI_DIR is readable by the user '$IPMI_USER'"
+sudo mkdir -p "$IPMI_DIR"
+sudo cp -T "$D/ipmi" "$IPMI_BIN"
+sudo chown -R "$IPMI_USER:root" "$IPMI_DIR"
+
+
+
+
+echo "Creating $IPMI_SERVICE_NAME.service..."
+service_file="/etc/systemd/system/$IPMI_SERVICE_NAME.service"
+if [ -f "$service_file" ]; then
+    ok=""
+    read -r -p "$service_file exists. Overwrite? (y/n): " ok
+    if [ "$ok" != "y" ]; then
+        abort
+    fi
+fi
+
+cat "$D/service.service.src" | envsubst | sudo tee "$service_file"
+
+echo "Enabling $IPMI_SERVICE_NAME.service..."
+sudo systemctl enable "$IPMI_SERVICE_NAME.service"
+
+echo "Starting $IPMI_SERVICE_NAME.service..."
+sudo systemctl start "$IPMI_SERVICE_NAME.service"
+
+echo "Done"

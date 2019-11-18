@@ -1,0 +1,14 @@
+[Unit]
+Description=IPMP Fan Control Service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=20
+User=${IPMI_USER}
+ExecStart=$IPMI_BIN
+
+[Install]
+WantedBy=multi-user.target

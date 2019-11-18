@@ -1,0 +1,111 @@
+#!/bin/sh
+
+IPMI_HOST="192.168.0.11"
+IPMI_USER="root"
+IPMI_PASSWORD="calvin"
+
+SPEED0="0x0"
+SPEED1="0xa"
+SPEED2="0x0f"
+SPEED3="0x14"
+SPEED4="0x1e"
+SPEED5="0x28"
+SPEED6="0x32"
+SPEED7="0x3c"
+SPEED8="0x50"
+SPEED9="0x64"
+
+TRESHOLD1=44
+TRESHOLD2=48
+TRESHOLD3=52
+TRESHOLD4=56
+TRESHOLD5=58
+TRESHOLD6=60
+TRESHOLD7=62
+TRESHOLD8=70
+
+
+ipmi_command() {
+    ipmitool -I "lanplus" -H "$IPMI_HOST" -U "$IPMI_USER" -P "$IPMI_PASSWORD" "$@"
+}
+
+ipmi_raw() {
+    ipmi_command raw "$@"
+}
+
+enable_manual_fan() {
+    echo "Enabling manual fan control" >&2
+    ipmi_raw 0x30 0x30 0x01 0x00
+}
+
+disable_manual_fan() {
+    echo "Disabling manual fan control" >&2
+    ipmi_raw 0x30 0x30 0x01 0x01
+}
+
+set_fan() {
+    echo "Setting fan speed to $1" >&2
+    ipmi_raw 0x30 0x30 0x02 0xff "$1"
+}
+
+get_temp() {
+    local temp="$(ipmi_command sdr type Temperature | sed -E 's/^.*[^0-9]([0-9]{1,2}) degrees.*$/\1/' | sort -r | head -1)"
+    echo "Temp: $temp" >&2
+    echo "$temp"
+}
+
+adjust() {
+    local temp="$(get_temp)"
+    local speed
+    if [ "$temp" -ge "$TRESHOLD8" ]; then
+        echo "Temp over treshold 8 ($TRESHOLD8 C)" >&2
+        speed="$SPEED9"
+    elif [ "$temp" -ge "$TRESHOLD7" ]; then
+        echo "Temp over treshold 7 ($TRESHOLD7 C)" >&2
+        speed="$SPEED8"
+    elif [ "$temp" -ge "$TRESHOLD6" ]; then
+        echo "Temp over treshold 6 ($TRESHOLD6 C)" >&2
+        speed="$SPEED7"
+    elif [ "$temp" -ge "$TRESHOLD5" ]; then
+        echo "Temp over treshold 5 ($TRESHOLD5 C)" >&2
+        speed="$SPEED6"
+    elif [ "$temp" -ge "$TRESHOLD4" ]; then
+        echo "Temp over treshold 4 ($TRESHOLD4 C)" >&2
+        speed="$SPEED5"
+    elif [ "$temp" -ge "$TRESHOLD3" ]; then
+        echo "Temp over treshold 3 ($TRESHOLD3 C)" >&2
+        speed="$SPEED4"
+    elif [ "$temp" -ge "$TRESHOLD2" ]; then
+        echo "Temp over treshold 2 ($TRESHOLD2 C)" >&2
+        speed="$SPEED3"
+    elif [ "$temp" -ge "$TRESHOLD1" ]; then
+        echo "Temp over treshold 1 ($TRESHOLD1 C)" >&2
+        speed="$SPEED2"
+    else
+        echo "Temp under treshold 1 ($TRESHOLD1 C)" >&2
+        speed="$SPEED1"
+    fi
+    set_fan "$speed"
+}
+
+
+
+
+cleanup() {
+    echo "Exiting..." >&2
+    disable_manual_fan
+    exit
+}
+
+trap "cleanup" TERM INT;
+trap "kill 0" EXIT
+
+
+
+enable_manual_fan
+
+while true; do
+    adjust
+    echo "Next update in 15s..."
+    sleep 15
+done
