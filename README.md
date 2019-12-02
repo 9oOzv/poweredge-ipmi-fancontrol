@@ -4,6 +4,8 @@ A simple daemon script implementing a custom fan curve on Dell PowerEdge servers
 
 I wrote this for my own purposes - to make my home server run quieter. If you want to use this, do it on your own risk. This hasn't been tester thoroughly or under heavy loads. Might cause damage due to overheating in the worst case.
 
+You can run shis daemon on any system that has access to your PowerEdge's IPMI. Personally I just connect the idrac interface to the server itself and run it on the server itself.
+
 # Deployment
 
 1) Make sure your PowerEdge server's iDRAC has IPMI enabled.
