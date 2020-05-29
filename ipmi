@@ -76,7 +76,7 @@ while true; do
     # I've had the manual fan control disable on its own once (idrac reset or
     # something?). Therefore periodically re-enable manual fan control
     enable_manual_fan
-    for i in $(seq 1 40); do
+    for i in $(seq 1 20); do
         adjust
         echo "Next update in 15s..." >&2
         sleep 15
