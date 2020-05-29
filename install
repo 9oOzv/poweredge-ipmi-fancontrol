@@ -45,10 +45,11 @@ fi
 
 
 
-echo "Copying the ipmi script to $IPMI_BIN"
+echo "Copying the ipmi scripts to $IPMI_DIR"
 echo "Note: Please ensure that $IPMI_DIR is readable by the user '$IPMI_USER'"
 sudo mkdir -p "$IPMI_DIR"
-sudo cp -T "$D/ipmi" "$IPMI_BIN"
+sudo cp "$D/ipmi" "$IPMI_DIR"
+sudo cp "$D/ipmi-common" "$IPMI_DIR"
 sudo chown -R "$IPMI_USER:root" "$IPMI_DIR"
 
 

@@ -1,92 +1,39 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-IPMI_HOST="192.168.0.11"
-IPMI_USER="root"
-IPMI_PASSWORD="calvin"
-
-SPEED0="0x0"
-SPEED1="0xa"
-SPEED2="0x0f"
-SPEED3="0x14"
-SPEED4="0x1e"
-SPEED5="0x28"
-SPEED6="0x32"
-SPEED7="0x3c"
-SPEED8="0x50"
-SPEED9="0x64"
-
-TRESHOLD1=44
-TRESHOLD2=48
-TRESHOLD3=52
-TRESHOLD4=56
-TRESHOLD5=58
-TRESHOLD6=60
-TRESHOLD7=62
-TRESHOLD8=70
+D="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+. "$D/ipmi-common"
 
 
-ipmi_command() {
-    ipmitool -I "lanplus" -H "$IPMI_HOST" -U "$IPMI_USER" -P "$IPMI_PASSWORD" "$@"
-}
 
-ipmi_raw() {
-    ipmi_command raw "$@"
-}
 
-enable_manual_fan() {
-    echo "Enabling manual fan control" >&2
-    ipmi_raw 0x30 0x30 0x01 0x00
-}
 
-disable_manual_fan() {
-    echo "Disabling manual fan control" >&2
-    ipmi_raw 0x30 0x30 0x01 0x01
-}
+declare -a SPEED
+declare -a THRESHOLD
 
-set_fan() {
-    echo "Setting fan speed to $1" >&2
-    ipmi_raw 0x30 0x30 0x02 0xff "$1"
-}
+SPEED[0]="0x00"
+SPEED[1]="0x0a"
+SPEED[2]="0x0d"
+SPEED[3]="0x11"
+SPEED[4]="0x14"
+SPEED[5]="0x1e"
+SPEED[6]="0x28"
+SPEED[7]="0x32"
+SPEED[8]="0x3c"
+SPEED[9]="0x50"
+SPEED[10]="0x64"
 
-get_temp() {
-    local temp="$(ipmi_command sdr type Temperature | sed -E 's/^.*[^0-9]([0-9]{1,2}) degrees.*$/\1/' | sort -r | head -1)"
-    echo "Temp: $temp" >&2
-    echo "$temp"
-}
+TRESHOLD[0]=-1000
+TRESHOLD[1]=44
+TRESHOLD[2]=46
+TRESHOLD[3]=48
+TRESHOLD[4]=52
+TRESHOLD[5]=56
+TRESHOLD[6]=58
+TRESHOLD[7]=60
+TRESHOLD[8]=62
+TRESHOLD[9]=70
 
-adjust() {
-    local temp="$(get_temp)"
-    local speed
-    if [ "$temp" -ge "$TRESHOLD8" ]; then
-        echo "Temp over treshold 8 ($TRESHOLD8 C)" >&2
-        speed="$SPEED9"
-    elif [ "$temp" -ge "$TRESHOLD7" ]; then
-        echo "Temp over treshold 7 ($TRESHOLD7 C)" >&2
-        speed="$SPEED8"
-    elif [ "$temp" -ge "$TRESHOLD6" ]; then
-        echo "Temp over treshold 6 ($TRESHOLD6 C)" >&2
-        speed="$SPEED7"
-    elif [ "$temp" -ge "$TRESHOLD5" ]; then
-        echo "Temp over treshold 5 ($TRESHOLD5 C)" >&2
-        speed="$SPEED6"
-    elif [ "$temp" -ge "$TRESHOLD4" ]; then
-        echo "Temp over treshold 4 ($TRESHOLD4 C)" >&2
-        speed="$SPEED5"
-    elif [ "$temp" -ge "$TRESHOLD3" ]; then
-        echo "Temp over treshold 3 ($TRESHOLD3 C)" >&2
-        speed="$SPEED4"
-    elif [ "$temp" -ge "$TRESHOLD2" ]; then
-        echo "Temp over treshold 2 ($TRESHOLD2 C)" >&2
-        speed="$SPEED3"
-    elif [ "$temp" -ge "$TRESHOLD1" ]; then
-        echo "Temp over treshold 1 ($TRESHOLD1 C)" >&2
-        speed="$SPEED2"
-    else
-        echo "Temp under treshold 1 ($TRESHOLD1 C)" >&2
-        speed="$SPEED1"
-    fi
-    set_fan "$speed"
-}
+N=9
 
 
 
@@ -102,10 +49,36 @@ trap "kill 0" EXIT
 
 
 
-enable_manual_fan
+
+adjust() {
+    local temp="$(get_temp)"
+    local speed
+
+    for i in $(seq "$N" -1 "0"); do
+        if [ "$temp" -ge "${TRESHOLD[$i]}" ]; then
+            break
+        fi
+    done
+
+    echo "Temp over threshold $i (${TRESHOLD[$i]} C)" >&2
+    speed="${SPEED[$((i+1))]}"
+
+    set_fan "$speed"
+}
+
+
+
+
+# Hack since the fancontrol does not seem to workcorrectly if startedimmediately at boot
+sleep 20
 
 while true; do
-    adjust
-    echo "Next update in 15s..."
-    sleep 15
+    # I've had the manual fan control disable on its own once (idrac reset or
+    # something?). Therefore periodically re-enable manual fan control
+    enable_manual_fan
+    for i in $(seq 1 40); do
+        adjust
+        echo "Next update in 15s..." >&2
+        sleep 15
+    done
 done
