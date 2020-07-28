@@ -3,13 +3,10 @@
 D="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 . "$D/ipmi-common"
 
+LAST_TEMP=0
+TEMP_DECREASING=
+TEMP_INCREASING=
 
-TARGET=54
-SPEED=1000
-MAX_SPEED=10000
-SPEED_INCREMENT=10
-SPEED_INCREMENT_INTERVAL=1
-UPDATE_INTERVAL_SECONDS=5
 
 
 cleanup() {
@@ -26,33 +23,56 @@ trap "kill 0" EXIT
 
 adjust() {
     local temp="$(get_temp)"
+    if [ "$temp" -lt "$LAST_TEMP" ]; then
+        TEMP_DECREASING=1
+        TEMP_INCREASING=
+    elif [ "$temp" -gt "$LAST_TEMP" ]; then
+        TEMP_DECREASING=
+        TEMP_INCREASING=1
+    fi
+
     local diff="$((temp - TARGET))"
+
     local speed_incr="$((SPEED_INCREMENT * UPDATE_INTERVAL_SECONDS / SPEED_INCREMENT_INTERVAL * diff))"
+    if [ "$speed_incr" -gt 0 ] && [ "$TEMP_DECREASING" ]; then
+        speed_incr=0
+    fi
+    if [ "$speed_incr" -lt 0 ] && [ "$TEMP_INCREASING" ]; then
+        speed_incr=0
+    fi
     local speed_incr_percent="$((speed_incr / MAX_SPEED))"
+
     SPEED="$((SPEED + speed_incr))"
     if [ "$SPEED" -lt "0" ]; then
         SPEED="0"
     fi
-
     if [ "$SPEED" -gt "$MAX_SPEED" ]; then
         SPEED="$MAX_SPEED"
     fi
     SPEED_PERCENT="$((SPEED * 100 / MAX_SPEED))"
     local speed_hex="$(printf "0x%.2x" "$SPEED_PERCENT")"
 
-    echo "Temp is $temp C" >&2
+    echo "Last temp was $LAST_TEMP C" >&2
+    echo "Current temp is $temp C" >&2
+    if [ "$TEMP_DECREASING" ]; then
+        echo "Temp is decreasing" >&2
+    fi
+    if [ "$TEMP_INCREASING" ]; then
+        echo "Temp is increasing" >&2
+    fi
     echo "Difference to target is $diff C" >&2
-    echo "Incrementing fan speed $speed_incr ($speed_incr_percent%)" >&2
+    echo "Changing fan speed by $speed_incr ($speed_incr_percent%)" >&2
     echo "Resulting speed is $SPEED/$MAX_SPEED ($SPEED_PERCENT%)" >&2
 
     set_fan "$speed_hex"
+    LAST_TEMP="$temp"
 }
 
 
 
 
 # Hack since the fancontrol does not seem to workcorrectly if startedimmediately at boot
-sleep 20
+# sleep 20
 
 while true; do
     # I've had the manual fan control disable on its own once (idrac reset or

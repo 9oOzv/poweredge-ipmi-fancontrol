@@ -50,6 +50,7 @@ echo "Note: Please ensure that $IPMI_DIR is readable by the user '$IPMI_USER'"
 sudo mkdir -p "$IPMI_DIR"
 sudo cp "$D/ipmi" "$IPMI_DIR"
 sudo cp "$D/ipmi-common" "$IPMI_DIR"
+sudo cp "$D/ipmi-config" "$IPMI_DIR"
 sudo chown -R "$IPMI_USER:root" "$IPMI_DIR"
 
 

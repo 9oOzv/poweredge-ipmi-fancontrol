@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
-
-IPMI_HOST="192.168.0.11"
-IPMI_USER="root"
-IPMI_PASSWORD="calvin"
+D="$(dirname "$(readlink -f "$BASH_SOURCE[0]")")"
+. "$D/ipmi-config"
 
 ipmi_command() {
     ipmitool -I "lanplus" -H "$IPMI_HOST" -U "$IPMI_USER" -P "$IPMI_PASSWORD" "$@"
@@ -32,4 +30,3 @@ get_temp() {
     echo "Temp: $temp" >&2
     echo "$temp"
 }
-
