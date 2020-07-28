@@ -12,13 +12,15 @@ You can run shis daemon on any system that has access to your PowerEdge's IPMI. 
 
 2) Make sure the system running this script has atleast `bash`, `ipmitool` and `envsubst`.
 
-3) Set the following values inside the script `ipmi`:
+3) Set the following values inside the script `ipmi-config`:
 
 ```
 IPMI_HOST=<ipmi ip or hostname>
 IPMI_USER=<ipmi user>
 IPMI_PASSWORD=<ipmi password>
 ```
+
+YOu can adjust the other configuration variables in the config file as well
 
 4) You should be able to run the daemon now `./ipmi`
 
@@ -28,6 +30,6 @@ IPMI_PASSWORD=<ipmi password>
 
 # Important Notes:
 
-This has been tested only on Dell PowerEdge R620 running Ubuntu 19.10. This repository includes a daemon script, that adjusts fan speeds according to the maximum temperature reading from any sensor. The thresholds and fan speeds are defined in the script `ipmi`. Temperatures should be in C and fan speeds can range 0-100 (typed in hex 0x00-0x64).
+This has been tested only on Dell PowerEdge R620 running Ubuntu 19.10 and Ubuntu 20.04. This repository includes a daemon script, that adjusts fan speeds according to the maximum temperature reading from any sensor. The thresholds and fan speeds are defined in the script `ipmi`.
 
 The daemon enables static/manual fan control on start, and disables it upon termination (SIGTERM, SIGINT). So stopping the service or quitting the script with Ctrl-C should return the fan control to normal.
