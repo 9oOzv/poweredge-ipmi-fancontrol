@@ -52,6 +52,7 @@ sudo cp "$D/ipmi" "$IPMI_DIR"
 sudo cp "$D/ipmi-common" "$IPMI_DIR"
 sudo cp "$D/ipmi-config" "$IPMI_DIR"
 sudo chown -R "$IPMI_USER:root" "$IPMI_DIR"
+sudo chmod -R go= "$IPMI_DIR"
 
 
 

@@ -22,3 +22,8 @@ SPEED_INCREMENT=50
 SPEED_INCREMENT_INTERVAL=10
 
 UPDATE_INTERVAL_SECONDS=5
+
+# The script seems to fail if launched too early in boot. Not sure why
+# If so, you can add a delay for launch by setting this variable.
+# E.g. START_DELAY_SECONDS=20
+START_DELAY_SECONDS=0

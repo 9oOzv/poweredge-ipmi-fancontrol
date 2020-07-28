@@ -72,7 +72,8 @@ adjust() {
 
 
 # Hack since the fancontrol does not seem to workcorrectly if startedimmediately at boot
-# sleep 20
+echo "Delaying launch by ${START_DELAY_SECONDS}s"
+sleep "$START_DELAY_SECONDS"
 
 while true; do
     # I've had the manual fan control disable on its own once (idrac reset or
