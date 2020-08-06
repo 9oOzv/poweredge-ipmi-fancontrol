@@ -10,7 +10,7 @@ TEMP_INCREASING=
 
 
 cleanup() {
-    echo "Exiting..." >&2
+    info "Exiting..."
     disable_manual_fan
     exit
 }
@@ -24,7 +24,7 @@ trap "kill 0" EXIT
 adjust() {
     local temp="$(get_temp)"
     if [ ! "${temp-}" ]; then
-        echo "Could not read temperatures" >&2
+        info "Could not read temperatures"
     fi
     if [ "$temp" -lt "$LAST_TEMP" ]; then
         TEMP_DECREASING=1
@@ -55,17 +55,17 @@ adjust() {
     SPEED_PERCENT="$((SPEED * 100 / MAX_SPEED))"
     local speed_hex="$(printf "0x%.2x" "$SPEED_PERCENT")"
 
-    echo "Last temp was $LAST_TEMP C" >&2
-    echo "Current temp is $temp C" >&2
+    info "Last temp was $LAST_TEMP C"
+    info "Current temp is $temp C"
     if [ "$TEMP_DECREASING" ]; then
-        echo "Temp is decreasing" >&2
+        info "Temp is decreasing"
     fi
     if [ "$TEMP_INCREASING" ]; then
-        echo "Temp is increasing" >&2
+        info "Temp is increasing"
     fi
-    echo "Difference to target is $diff C" >&2
-    echo "Changing fan speed by $speed_incr ($speed_incr_percent%)" >&2
-    echo "Resulting speed is $SPEED/$MAX_SPEED ($SPEED_PERCENT%)" >&2
+    info "Difference to target is $diff C"
+    info "Changing fan speed by $speed_incr ($speed_incr_percent%)"
+    info "Resulting speed is $SPEED/$MAX_SPEED ($SPEED_PERCENT%)"
 
     set_fan "$speed_hex"
     LAST_TEMP="$temp"
@@ -75,7 +75,7 @@ adjust() {
 
 
 # Hack since the fancontrol does not seem to workcorrectly if startedimmediately at boot
-echo "Delaying launch by ${START_DELAY_SECONDS}s"
+info "Delaying launch by ${START_DELAY_SECONDS}s"
 sleep "$START_DELAY_SECONDS"
 
 while true; do
@@ -84,7 +84,7 @@ while true; do
     enable_manual_fan
     for i in $(seq 1 20); do
         adjust
-        echo "Next update in ${UPDATE_INTERVAL_SECONDS}s..." >&2
+        info "Next update in ${UPDATE_INTERVAL_SECONDS}s..."
         sleep "$UPDATE_INTERVAL_SECONDS"
     done
 done

@@ -2,6 +2,14 @@
 D="$(dirname "$(readlink -f "$BASH_SOURCE[0]")")"
 . "$D/ipmi-config"
 
+info() {
+    echo "$@" >&2
+}
+
+warn() {
+    echo "$@" >&2
+}
+
 ipmi_command() {
     ipmitool -I "lanplus" -H "$IPMI_HOST" -U "$IPMI_USER" -P "$IPMI_PASSWORD" "$@"
 }
@@ -11,22 +19,22 @@ ipmi_raw() {
 }
 
 enable_manual_fan() {
-    echo "Enabling manual fan control" >&2
+    info "enabling manual fan control"
     ipmi_raw 0x30 0x30 0x01 0x00
 }
 
 disable_manual_fan() {
-    echo "Disabling manual fan control" >&2
+    info "disabling manual fan control"
     ipmi_raw 0x30 0x30 0x01 0x01
 }
 
 set_fan() {
-    echo "Setting fan speed to $1" >&2
+    info "setting fan speed to $1"
     ipmi_raw 0x30 0x30 0x02 0xff "$1"
 }
 
 get_temp() {
     local temp="$(ipmi_command sdr type Temperature | sed -E 's/^.*[^0-9]([0-9]{1,2}) degrees.*$/\1/' | sort -r | head -1)"
-    echo "Temp: $temp" >&2
+    info "temp: $temp"
     echo "$temp"
 }
