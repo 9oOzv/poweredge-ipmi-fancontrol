@@ -26,12 +26,14 @@ adjust() {
     if [ ! "${temp-}" ]; then
         info "Could not read temperatures"
     fi
-    if [ "$temp" -lt "$LAST_TEMP" ]; then
-        TEMP_DECREASING=1
-        TEMP_INCREASING=
-    elif [ "$temp" -gt "$LAST_TEMP" ]; then
-        TEMP_DECREASING=
-        TEMP_INCREASING=1
+    if [ "${LAST_TEMP-}" ]; then
+        if [ "$temp" -lt "$LAST_TEMP" ]; then
+            TEMP_DECREASING=1
+            TEMP_INCREASING=
+        elif [ "$temp" -gt "$LAST_TEMP" ]; then
+            TEMP_DECREASING=
+            TEMP_INCREASING=1
+        fi
     fi
 
     local diff="$((temp - TARGET))"
