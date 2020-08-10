@@ -34,7 +34,11 @@ set_fan() {
 }
 
 get_temp() {
-    local temp="$(ipmi_command sdr type Temperature | sed -E 's/^.*[^0-9]([0-9]{1,2}) degrees.*$/\1/' | sort -r | head -1)"
+    local temp="$(ipmi_command sdr type Temperature \
+        | ipmi_command sdr type Temperature \
+        | egrep '^.*[^0-9]([0-9]{1,2}) degrees.*$' \
+        | sed -E 's/^.*[^0-9]([0-9]{1,2}) degrees.*$/\1/' \
+        | sort -r | head -1)"
     info "temp: $temp"
     echo "$temp"
 }
