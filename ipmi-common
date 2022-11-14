@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-D="$(dirname "$(readlink -f "$BASH_SOURCE[0]")")"
+D="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 . "$D/ipmi-config"
 
 info() {
@@ -33,12 +33,19 @@ set_fan() {
     ipmi_raw 0x30 0x30 0x02 0xff "$1"
 }
 
-get_temp() {
-    local temp="$(ipmi_command sdr type Temperature \
+get_temps_ipmi() {
+    ipmi_command sdr type Temperature \
         | ipmi_command sdr type Temperature \
         | egrep '^.*[^0-9]([0-9]{1,2}) degrees.*$' \
-        | sed -E 's/^.*[^0-9]([0-9]{1,2}) degrees.*$/\1/' \
-        | sort -r | head -1)"
+        | sed -E 's/^.*[^0-9]([0-9]{1,2}) degrees.*$/\1/'
+}
+
+get_temps_sysctl() {
+    sysctl dev.cpu | grep 'temperature' | sed -E 's/^.* ([0-9\.]+)\.[0-9]+C$/\1/g'
+}
+
+get_temp() {
+    local temp="$( (get_temps_ipmi; get_temps_sysctl) | sort -n | tail -1)"
     info "temp: $temp"
     echo "$temp"
 }

@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# PROVIDE: fancontrol
+# REQUIRE: login
+# KEYWORD: fancontrol
+
+. /etc/rc.subr
+
+name="$IPMI_SERVICE_NAME"
+rcvar="${IPMI_SERVICE_NAME}_enable"
+procname="$IPMI_BIN"
+#pidfile="/var/run/$name.pid"
+pidfile="/$IPMI_DIR/$name.pid"
+command="/usr/sbin/daemon"
+command_interpreter="bash"
+command_args="-f -p $pidfile -S $procname"
+${IPMI_SERVICE_NAME}_user="$IPMI_USER"
+load_rc_config "$IPMI_SERVICE_NAME"
+
+run_rc_command "$1"
+

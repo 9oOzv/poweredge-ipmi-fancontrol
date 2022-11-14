@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
-IPMI_HOST="192.168.0.11"
+IPMI_HOST="192.168.13.2"
 IPMI_USER="root"
 IPMI_PASSWORD="calvin"
 
 # Target temperature in C
-TARGET=54
+TARGET=70
 
 # Fan speed will be set as integer percentage SPEED*100/MAX_SPEED
 # SPEED set here is the initial fan speeds
 # Use MAX_SPEED big enough (e.g. 1000 or 10000). Otherwise speed increments
 # might not work due to integer logic (fractional speed steps gets rounded to 0)
-SPEED=1000
+SPEED=2000
 MAX_SPEED=10000
 
 # These values control the increments/decrements in speed.

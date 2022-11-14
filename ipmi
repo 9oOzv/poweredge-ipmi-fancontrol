@@ -8,6 +8,11 @@ TEMP_DECREASING=
 TEMP_INCREASING=
 
 
+if [ $# -ge 1 ]; then
+    ipmi_command "$@"
+    exit $?
+fi
+
 
 cleanup() {
     info "Exiting..."
